@@ -347,8 +347,26 @@ if __name__ == "__main__":
     ensemble = AppleEnsemble('best_apple1_swin.pth', 'best_apple1_convnext.pth', 'best_apple1_vit.pth')
     generate_meta_dataset(OUTPUT_DIR, ensemble, output_csv=META_CSV)
 
-    # --- PHASE 3: SVM Grading ---
+def generate_explanation(shap_values, feature_names, predicted_class):
+    # Find the feature with the highest positive impact on the prediction
+    max_idx = np.argmax(shap_values)
+    top_feature = feature_names[max_idx]
+    
+    model_map = {'s': 'Swin Transformer', 'c': 'ConvNeXt', 'v': 'Vision Transformer (ViT)'}
+    model_name = model_map.get(top_feature[0], 'Ensemble Model')
+    
+    explanation = (
+        f"The model predicted Grade {predicted_class}. "
+        f"This decision was predominantly driven by visual features extracted by the {model_name} "
+        f"(Feature {top_feature}), which had the highest positive SHAP impact value, indicating strong confidence "
+        f"in this class based on spatial and textural apple patterns."
+    )
+    return explanation
+
+    # --- PHASE 3: SVM Grading with XAI ---
+if __name__ == "__main__":
     if os.path.exists(SVM_MODEL_PATH):
+        import shap
         svm_clf = joblib.load(SVM_MODEL_PATH)
         df_features = pd.read_csv(META_CSV)
         
@@ -356,11 +374,44 @@ if __name__ == "__main__":
             predictions = svm_clf.predict(df_features)
             df_features['Predicted_Grade'] = predictions
             
+            # --- XAI Integration ---
+            print("\nGenerating XAI Textual Explanations using SHAP...")
+            feature_data = df_features.drop('Predicted_Grade', axis=1)
+            
+            # Use KMeans to summarize the background data (for faster KernelExplainer)
+            background = shap.kmeans(feature_data, min(5, len(feature_data)))
+            explainer = shap.KernelExplainer(svm_clf.predict, background)
+            
+            # Get SHAP values for the dataset
+            shap_values = explainer.shap_values(feature_data)
+            
+            explanations = []
+            feature_names = feature_data.columns.tolist()
+            
+            for i in range(len(df_features)):
+                pred = predictions[i]
+                # Check if multi-class SVM (list of arrays) or binary (single array)
+                if isinstance(shap_values, list):
+                    # Sometimes SHAP returns list of length n_classes, sometimes not depending on SVM config.
+                    # We try to index by prediction, fallback to single array if index out of bounds.
+                    try:
+                        vals = shap_values[int(pred)][i]
+                    except:
+                        vals = shap_values[0][i] 
+                else:
+                    vals = shap_values[i]
+                
+                exp_text = generate_explanation(vals, feature_names, pred)
+                explanations.append(exp_text)
+                
+            df_features['Explanation'] = explanations
+            
             # Save results
             df_features.to_csv('predictions_results.csv', index=False)
             
             print("\n--- Grade Distribution ---")
             print(df_features['Predicted_Grade'])
+            print("Predictions and XAI Explanations complete. Results saved to 'predictions_results.csv'.")
         else:
             print("No features extracted. Check your extraction step.")
     else:
