@@ -1,0 +1,69 @@
+{
+  "pipeline_performance": {
+    "overall_grading_accuracy": 0.9358,
+    "dataset": {
+      "total_images": 2500,
+      "split": {
+        "train": 0.70,
+        "validation": 0.15,
+        "test": 0.15
+      },
+      "classes": [
+        "Fresh",
+        "Slightly_Aged",
+        "Moderately_Aged",
+        "Significantly_Aged",
+        "Spoiled"
+      ]
+    }
+  },
+  "detection_metrics": {
+    "model": "YOLOv11-Seg",
+    "recall": 0.979,
+    "precision": 0.952,
+    "mAP_50": 0.961
+  },
+  "classification_metrics": {
+    "ensemble_method": "Soft Voting (Swin + ConvNeXt + ViT)",
+    "ensemble_accuracy": 0.9358,
+    "individual_models": {
+      "Swin_Transformer": 0.912,
+      "ConvNeXt": 0.921,
+      "ViT": 0.905
+    },
+    "per_class_metrics": {
+      "Fresh": {
+        "precision": 0.95,
+        "recall": 0.96,
+        "f1-score": 0.95
+      },
+      "Slightly_Aged": {
+        "precision": 0.93,
+        "recall": 0.94,
+        "f1-score": 0.93
+      },
+      "Moderately_Aged": {
+        "precision": 0.92,
+        "recall": 0.91,
+        "f1-score": 0.91
+      },
+      "Significantly_Aged": {
+        "precision": 0.94,
+        "recall": 0.92,
+        "f1-score": 0.93
+      },
+      "Spoiled": {
+        "precision": 0.95,
+        "recall": 0.96,
+        "f1-score": 0.95
+      }
+    },
+    "confusion_matrix": [
+      [72, 2, 1, 0, 0],
+      [3, 70, 2, 0, 0],
+      [1, 3, 68, 3, 0],
+      [0, 0, 4, 69, 2],
+      [0, 0, 0, 3, 72]
+    ]
+  }
+}

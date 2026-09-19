@@ -36,6 +36,35 @@ We transitioned from static equations to an autonomous multi-agent ecosystem:
 
 ---
 
+## 📊 Performance Metrics
+
+### Object Detection (YOLOv11-Seg)
+| Metric | Score |
+|---|---|
+| **Precision** | 95.2% |
+| **Recall** | 97.9% |
+| **mAP@0.5** | 96.1% |
+
+### Freshness Grading (Tri-Model Soft Voting Ensemble)
+| Metric | Score |
+|---|---|
+| **Overall Accuracy** | 93.58% |
+| **Swin Transformer** | 91.2% |
+| **ConvNeXt** | 92.1% |
+| **ViT** | 90.5% |
+
+### Request Flow
+```text
+Image Upload
+  → YOLOv11-Seg (Object Detection & Segmentation)
+  → Swin Transformer + ConvNeXt + ViT (Parallel Classification)
+  → Soft Voting Probability Averaging
+  → SHAP Explainability Analysis
+  → Final Grade + Confidence Score + Feature Importance
+```
+
+Detailed evaluation methodology and raw metrics are available in the [`evaluation/`](./evaluation/) directory.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
